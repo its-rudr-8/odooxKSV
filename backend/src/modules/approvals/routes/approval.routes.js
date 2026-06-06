@@ -8,9 +8,9 @@ const { approvalSchema, approvalDecisionSchema } = require("../validator/approva
 
 const approvalRouter = express.Router();
 
-approvalRouter.post("/", authenticate, authorize("admin", "manager", "procurement_officer"), validateRequest(approvalSchema), approvalController.create);
+approvalRouter.post("/", authenticate, authorize("procurement_officer", "admin"), validateRequest(approvalSchema), approvalController.create);
 approvalRouter.get("/:id", authenticate, authorize("admin", "manager", "procurement_officer"), approvalController.getById);
-approvalRouter.patch("/:id/approve", authenticate, authorize("admin", "manager"), validateRequest(approvalDecisionSchema), approvalController.approve);
-approvalRouter.patch("/:id/reject", authenticate, authorize("admin", "manager"), validateRequest(approvalDecisionSchema), approvalController.reject);
+approvalRouter.patch("/:id/approve", authenticate, authorize("manager", "admin"), validateRequest(approvalDecisionSchema), approvalController.approve);
+approvalRouter.patch("/:id/reject", authenticate, authorize("manager", "admin"), validateRequest(approvalDecisionSchema), approvalController.reject);
 
 module.exports = { approvalRouter };

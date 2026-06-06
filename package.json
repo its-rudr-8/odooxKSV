@@ -4,7 +4,14 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "backend:dev": "node server.js",
+    "backend:start": "node server.js",
+    "backend:build": "node -e \"console.log('Backend is plain Node.js; no build step required.')\"",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:preview": "npm --prefix frontend run preview",
+    "build": "npm run backend:build && npm run frontend:build"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

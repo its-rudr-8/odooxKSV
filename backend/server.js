@@ -30,11 +30,11 @@ registerApp(app);
 async function startServer() {
   if (MONGODB_URI) {
     try {
-      await mongoose.connect(MONGODB_URI);
+      await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
       console.log("Connected to MongoDB");
     } catch (error) {
       console.error("MongoDB connection failed:", error.message);
-      process.exit(1);
+      console.error("Starting server without database connection");
     }
   }
 
