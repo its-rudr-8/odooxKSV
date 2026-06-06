@@ -1,11 +1,22 @@
 {
+  "name": "vendorbridge-erp",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "joi": "^17.13.3",
     "mongodb": "^7.2.0",
-    "mongoose": "^9.6.3"
+    "mongoose": "^9.6.3",
+    "nodemailer": "^6.10.1"
   }
 }

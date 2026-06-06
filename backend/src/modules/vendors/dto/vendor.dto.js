@@ -1,0 +1,36 @@
+function toVendorDto(vendor) {
+  return {
+    id: vendor._id,
+    vendorCode: vendor.vendorCode,
+    companyName: vendor.companyName,
+    companyType: vendor.companyType,
+    vendorCategory: vendor.vendorCategory,
+    contactPerson: vendor.contactPerson,
+    designation: vendor.designation,
+    email: vendor.email,
+    phone: vendor.phone,
+    alternatePhone: vendor.alternatePhone,
+    website: vendor.website,
+    gstNumber: vendor.gstNumber,
+    panNumber: vendor.panNumber,
+    address: vendor.address,
+    city: vendor.city,
+    state: vendor.state,
+    country: vendor.country,
+    postalCode: vendor.postalCode,
+    bankDetails: vendor.bankDetails,
+    paymentTerms: vendor.paymentTerms,
+    status: vendor.status,
+    isVerified: vendor.isVerified,
+    rating: vendor.rating,
+    performanceScore: vendor.performanceScore,
+    lastTransactionDate: vendor.lastTransactionDate,
+    ownerUser: vendor.ownerUser,
+    createdBy: vendor.createdBy,
+    updatedBy: vendor.updatedBy,
+    createdAt: vendor.createdAt,
+    updatedAt: vendor.updatedAt,
+  };
+}
+
+module.exports = { toVendorDto };

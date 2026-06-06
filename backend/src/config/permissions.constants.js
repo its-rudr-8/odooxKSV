@@ -1,0 +1,59 @@
+const { ROLES } = require('./roles.constants');
+
+const PERMISSIONS = Object.freeze({
+  USER_CREATE: 'user:create',
+  USER_READ: 'user:read',
+  USER_UPDATE: 'user:update',
+  USER_DELETE: 'user:delete',
+  VENDOR_CREATE: 'vendor:create',
+  VENDOR_READ: 'vendor:read',
+  VENDOR_UPDATE: 'vendor:update',
+  VENDOR_DELETE: 'vendor:delete',
+  RFQ_CREATE: 'rfq:create',
+  RFQ_READ: 'rfq:read',
+  RFQ_UPDATE: 'rfq:update',
+  RFQ_DELETE: 'rfq:delete',
+  QUOTATION_CREATE: 'quotation:create',
+  QUOTATION_READ: 'quotation:read',
+  QUOTATION_UPDATE: 'quotation:update',
+  APPROVAL_MANAGE: 'approval:manage',
+  PURCHASE_ORDER_MANAGE: 'purchase_order:manage',
+  INVOICE_MANAGE: 'invoice:manage',
+  AUDIT_READ: 'audit:read',
+  ANALYTICS_READ: 'analytics:read',
+});
+
+const ROLE_PERMISSION_MAP = Object.freeze({
+  [ROLES.ADMIN]: Object.values(PERMISSIONS),
+  [ROLES.MANAGER]: [
+    PERMISSIONS.USER_READ,
+    PERMISSIONS.VENDOR_CREATE,
+    PERMISSIONS.VENDOR_READ,
+    PERMISSIONS.VENDOR_UPDATE,
+    PERMISSIONS.RFQ_READ,
+    PERMISSIONS.RFQ_UPDATE,
+    PERMISSIONS.QUOTATION_READ,
+    PERMISSIONS.QUOTATION_UPDATE,
+    PERMISSIONS.APPROVAL_MANAGE,
+    PERMISSIONS.PURCHASE_ORDER_MANAGE,
+    PERMISSIONS.INVOICE_MANAGE,
+    PERMISSIONS.AUDIT_READ,
+    PERMISSIONS.ANALYTICS_READ,
+  ],
+  [ROLES.PROCUREMENT_OFFICER]: [
+    PERMISSIONS.VENDOR_READ,
+    PERMISSIONS.RFQ_CREATE,
+    PERMISSIONS.RFQ_READ,
+    PERMISSIONS.RFQ_UPDATE,
+    PERMISSIONS.QUOTATION_READ,
+    PERMISSIONS.QUOTATION_UPDATE,
+    PERMISSIONS.AUDIT_READ,
+  ],
+  [ROLES.VENDOR]: [
+    PERMISSIONS.RFQ_READ,
+    PERMISSIONS.QUOTATION_CREATE,
+    PERMISSIONS.QUOTATION_READ,
+  ],
+});
+
+module.exports = { PERMISSIONS, ROLE_PERMISSION_MAP };
