@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const { apiRouter } = require("./backend/src/routes");
+const { buildCorsOptions } = require("./backend/src/config/cors.config");
 const { errorHandler } = require("./backend/src/shared/middleware/errorHandler");
 const { notFound } = require("./backend/src/shared/middleware/notFound");
 
@@ -20,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors(buildCorsOptions()));
 app.use(helmet());
 app.use(
   rateLimit({

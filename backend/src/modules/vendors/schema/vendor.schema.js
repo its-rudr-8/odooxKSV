@@ -62,10 +62,6 @@ const vendorSchema = createBaseSchema(
   { timestamps: true, collection: "vendors" },
 );
 
-vendorSchema.index({ vendorCode: 1 }, { unique: true });
-vendorSchema.index({ companyName: 1 });
-vendorSchema.index({ email: 1 }, { unique: true });
-vendorSchema.index({ status: 1 });
 vendorSchema.index({ companyName: "text", vendorCode: "text", vendorCategory: "text", city: "text", state: "text", email: "text" });
 vendorSchema.plugin(softDeletePlugin);
 vendorSchema.plugin(auditPlugin);

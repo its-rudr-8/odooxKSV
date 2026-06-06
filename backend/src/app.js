@@ -2,12 +2,13 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
+const { buildCorsOptions } = require("./config/cors.config");
 const { apiRouter } = require("./routes");
 const { errorHandler } = require("./shared/middleware/errorHandler");
 const { notFound } = require("./shared/middleware/notFound");
 
 function registerApp(app) {
-  app.use(cors());
+  app.use(cors(buildCorsOptions()));
   app.use(helmet());
   app.use(
     rateLimit({
