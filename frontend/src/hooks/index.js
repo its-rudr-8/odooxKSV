@@ -1,1 +1,2 @@
-export const hooks = {};
+export { useAuth } from './useAuth';
+export { usePermissions } from './usePermissions';

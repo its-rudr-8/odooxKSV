@@ -14,11 +14,13 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
+import DebugPage from './pages/DebugPage';
 import RequireAuth from './components/RequireAuth';
 
 export default function App() {
   return (
     <Routes>
+      <Route path="/debug" element={<DebugPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forbidden" element={<ForbiddenPage />} />

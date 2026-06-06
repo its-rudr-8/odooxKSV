@@ -6,7 +6,14 @@ import { useAuth } from '../hooks/useAuth';
 export default function SignupPage() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: '' });
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phone: '',
+    role: 'vendor',
+  });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
@@ -27,18 +34,15 @@ export default function SignupPage() {
     setIsSubmitting(true);
 
     try {
-      await apiClient.post('/auth/register', {
-        ...formData,
-        role: 'vendor',
-      });
-      setSuccess('Signup successful. You may now log in.');
-      setFormData({ firstName: '', lastName: '', email: '', password: '' });
-      setTimeout(() => navigate('/login', { replace: true }), 1200);
+      await apiClient.post('/auth/register', formData);
+      setSuccess('Account created successfully! Redirecting to login...');
+      setFormData({ firstName: '', lastName: '', email: '', password: '', phone: '', role: 'vendor' });
+      setTimeout(() => navigate('/login', { replace: true }), 1500);
     } catch (requestError) {
       const message =
         requestError.code === 'ERR_NETWORK'
           ? 'Backend server is not reachable. Start the backend and try again.'
-          : requestError.response?.data?.message || 'Signup failed. Please verify your information.';
+          : requestError.response?.data?.message || 'Registration failed. Please verify your information.';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -46,78 +50,120 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="page" style={{ minHeight: '100vh', placeItems: 'center', padding: 20 }}>
-      <section className="page__hero" style={{ maxWidth: 520, width: '100%' }}>
-        <h2 className="page__title">VendorBridge Sign Up</h2>
-        <p className="page__subtitle">Create a vendor account to submit quotations and track RFQ progress.</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: '#08111f' }}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: '500px', width: '100%', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(16,28,49,0.5)' }}>
+        <h1 style={{ marginTop: 0, textAlign: 'center', color: '#e8edf6' }}>Create Account</h1>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: '12px', color: '#9ca9be', marginBottom: '8px' }}>First Name</div>
+            <input
+              name="firstName"
+              onChange={handleChange}
+              required
+              type="text"
+              value={formData.firstName}
+              placeholder="John"
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(8,17,31,0.72)', color: '#e8edf6', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </label>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: '12px', color: '#9ca9be', marginBottom: '8px' }}>Last Name</div>
+            <input
+              name="lastName"
+              onChange={handleChange}
+              required
+              type="text"
+              value={formData.lastName}
+              placeholder="Doe"
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(8,17,31,0.72)', color: '#e8edf6', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </label>
+        </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16, marginTop: 28 }}>
-          <div style={{ display: 'grid', gap: 16 }}>
-            <label style={{ display: 'grid', gap: 8, color: 'var(--muted)' }}>
-              First name
-              <input
-                name="firstName"
-                onChange={handleChange}
-                required
-                type="text"
-                value={formData.firstName}
-                style={{ width: '100%', padding: '12px 14px' }}
-              />
-            </label>
-            <label style={{ display: 'grid', gap: 8, color: 'var(--muted)' }}>
-              Last name
-              <input
-                name="lastName"
-                onChange={handleChange}
-                required
-                type="text"
-                value={formData.lastName}
-                style={{ width: '100%', padding: '12px 14px' }}
-              />
-            </label>
-            <label style={{ display: 'grid', gap: 8, color: 'var(--muted)' }}>
-              Email
-              <input
-                autoComplete="email"
-                name="email"
-                onChange={handleChange}
-                required
-                type="email"
-                value={formData.email}
-                style={{ width: '100%', padding: '12px 14px' }}
-              />
-            </label>
-            <label style={{ display: 'grid', gap: 8, color: 'var(--muted)' }}>
-              Password
-              <input
-                autoComplete="new-password"
-                name="password"
-                onChange={handleChange}
-                required
-                type="password"
-                value={formData.password}
-                minLength={8}
-                style={{ width: '100%', padding: '12px 14px' }}
-              />
-            </label>
-          </div>
+        <label style={{ display: 'block', marginBottom: '16px' }}>
+          <div style={{ fontSize: '12px', color: '#9ca9be', marginBottom: '8px' }}>Email</div>
+          <input
+            autoComplete="email"
+            name="email"
+            onChange={handleChange}
+            required
+            type="email"
+            value={formData.email}
+            placeholder="john@company.com"
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(8,17,31,0.72)', color: '#e8edf6', fontSize: '14px', fontFamily: 'inherit' }}
+          />
+        </label>
 
-          {error ? <p style={{ color: 'var(--danger)', margin: 0 }}>{error}</p> : null}
-          {success ? <p style={{ color: 'var(--success)', margin: 0 }}>{success}</p> : null}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: '12px', color: '#9ca9be', marginBottom: '8px' }}>Phone</div>
+            <input
+              name="phone"
+              onChange={handleChange}
+              type="tel"
+              value={formData.phone}
+              placeholder="+1 (555) 000-0000"
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(8,17,31,0.72)', color: '#e8edf6', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </label>
+          <label style={{ display: 'block' }}>
+            <div style={{ fontSize: '12px', color: '#9ca9be', marginBottom: '8px' }}>Role</div>
+            <select
+              name="role"
+              onChange={handleChange}
+              value={formData.role}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(8,17,31,0.72)', color: '#e8edf6', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+            >
+              <option value="vendor">Vendor</option>
+              <option value="procurement_officer">Procurement Officer</option>
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+            </select>
+          </label>
+        </div>
 
-          <button
-            disabled={isSubmitting}
-            type="submit"
-            style={{ border: 0, borderRadius: 12, background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', color: '#04111a', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: 800, padding: '12px 14px', opacity: isSubmitting ? 0.72 : 1 }}
-          >
-            {isSubmitting ? 'Creating account...' : 'Sign up as vendor'}
-          </button>
-        </form>
+        <label style={{ display: 'block', marginBottom: '16px' }}>
+          <div style={{ fontSize: '12px', color: '#9ca9be', marginBottom: '8px' }}>Password</div>
+          <input
+            autoComplete="new-password"
+            name="password"
+            onChange={handleChange}
+            required
+            type="password"
+            value={formData.password}
+            placeholder="••••••••"
+            minLength={8}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(8,17,31,0.72)', color: '#e8edf6', fontSize: '14px', fontFamily: 'inherit' }}
+          />
+          <div style={{ fontSize: '11px', color: '#9ca9be', marginTop: '4px' }}>Minimum 8 characters</div>
+        </label>
 
-        <p style={{ marginTop: 20, color: 'var(--muted)' }}>
-          Already registered? <Link to="/login">Sign in</Link>.
+        {error && <div style={{ color: '#ff6b6b', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
+        {success && <div style={{ color: '#4dd0ae', marginBottom: '16px', fontSize: '14px' }}>{success}</div>}
+
+        <button
+          disabled={isSubmitting}
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '10px',
+            borderRadius: '8px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #4dd0ae, #7cc4ff)',
+            color: '#04111a',
+            fontWeight: 'bold',
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            opacity: isSubmitting ? 0.7 : 1,
+          }}
+        >
+          {isSubmitting ? 'Creating account...' : 'Register'}
+        </button>
+
+        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: '#9ca9be' }}>
+          Already have an account? <Link to="/login" style={{ color: '#4dd0ae', textDecoration: 'none' }}>Sign in</Link>
         </p>
-      </section>
+      </form>
     </div>
   );
 }
