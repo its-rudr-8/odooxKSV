@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import { getDashboardPath } from '../utils';
+import logoUrl from '../assets/Logo.jpeg';
 
 export default function SignupPage() {
   const auth = useAuth();
@@ -53,6 +54,9 @@ export default function SignupPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: '#08111f' }}>
       <form onSubmit={handleSubmit} style={{ maxWidth: '500px', width: '100%', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(16,28,49,0.5)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 8 }}>
+          <img src={logoUrl} alt="VendorBridge" style={{ height: 56 }} />
+        </div>
         <h1 style={{ marginTop: 0, textAlign: 'center', color: '#e8edf6' }}>Create Account</h1>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>

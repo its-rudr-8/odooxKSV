@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 320 96">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#2a9d6f"/>
+      <stop offset="1" stop-color="#4dd0ae"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="96" rx="8" fill="transparent"/>
+  <text x="24" y="60" font-family="Segoe UI, Arial" font-size="56" font-weight="700" fill="url(#g)">VB</text>
+  <text x="110" y="56" font-family="Segoe UI, Arial" font-size="20" fill="#0b2a1a">VendorBridge</text>
+  <text x="110" y="76" font-family="Segoe UI, Arial" font-size="10" fill="#4a6a6a">Bridging trust. Delivering growth.</text>
+</svg>

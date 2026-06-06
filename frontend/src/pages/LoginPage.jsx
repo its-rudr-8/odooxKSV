@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import { getDashboardPath } from '../utils';
+import logoUrl from '../assets/Logo.jpeg';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -44,6 +45,9 @@ export default function LoginPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: '#08111f' }}>
       <form onSubmit={handleSubmit} style={{ maxWidth: '400px', width: '100%', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(16,28,49,0.5)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 12 }}>
+          <img src={logoUrl} alt="VendorBridge" style={{ height: 56 }} />
+        </div>
         <h1 style={{ marginTop: 0, textAlign: 'center', color: '#e8edf6' }}>VendorBridge Login</h1>
         
         <label style={{ display: 'block', marginBottom: '16px' }}>

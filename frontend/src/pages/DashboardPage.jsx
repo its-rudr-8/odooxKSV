@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useAuth } from '../hooks/useAuth';
+import logoUrl from '../assets/Logo.jpeg';
+import { hasFeatureAccess, ROLE_LABELS } from "../utils/rolePermissions";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const spendingData = [
@@ -73,24 +76,15 @@ const activities = [
   { id: 6, icon: "🧾", text: "RFQ-002 closed successfully", time: "3 days ago", type: "info" },
 ];
 
-const NAV = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "vendors", label: "Vendors" },
-  { key: "rfqs", label: "RFQ's" },
-  { key: "quotations", label: "Quotations" },
-  { key: "approvals", label: "Approvals" },
-  { key: "purchase-orders", label: "Purchase Orders" },
-  { key: "invoices", label: "Invoices" },
-  { key: "reports", label: "Reports" },
-  { key: "activity", label: "Activity" },
-];
+// NAV will be created per-role inside the component
 
 const StatusBadge = ({ status }) => {
   const map = {
     Approved: { bg: "#e6f4ec", color: "#1a7a40" },
     Active: { bg: "#e6f4ec", color: "#1a7a40" },
     Paid: { bg: "#e6f4ec", color: "#1a7a40" },
-    Accepted: { bg: "#e6f4ec", color: "#1a7a40" },
+    Accepted: {
+       bg: "#e6f4ec", color: "#1a7a40" },
     Shortlisted: { bg: "#e6f4ec", color: "#1a7a40" },
     Pending: { bg: "#fff8e1", color: "#a07800" },
     "Under Review": { bg: "#fff8e1", color: "#a07800" },
@@ -116,20 +110,127 @@ const Stars = ({ rating }) => (
   </span>
 );
 
-export default function VendorBridge() {
+export default function VendorBridge({ dashboardRole }) {
   const [active, setActive] = useState("dashboard");
   const [showNewRFQ, setShowNewRFQ] = useState(false);
   const [showAddVendor, setShowAddVendor] = useState(false);
+  const [showGenerateInvoice, setShowGenerateInvoice] = useState(false);
   const [vendorList, setVendorList] = useState(vendors);
   const [rfqList, setRfqList] = useState(rfqs);
+  const [invoiceList, setInvoiceList] = useState(invoices);
   const [newVendor, setNewVendor] = useState({ name: "", category: "", contact: "", status: "Active" });
   const [newRFQ, setNewRFQ] = useState({ title: "", budget: "", deadline: "", vendors: 0 });
   const [approvalList, setApprovalList] = useState(approvals);
+  const [newInvoice, setNewInvoice] = useState({ vendor: '', po: '', amount: '', due: '', status: 'Pending' });
 
+  const { user } = useAuth();
+  const role = dashboardRole || user?.role || 'procurement_officer';
+
+  const ROLE_NAV = {
+    procurement_officer: [
+      { key: 'dashboard', label: 'Dashboard' },
+      { key: 'vendors', label: 'Vendors' },
+      { key: 'rfqs', label: 'RFQs' },
+      { key: 'quotations', label: 'Quotations' },
+      { key: 'comparison', label: 'Comparison' },
+      { key: 'purchase-orders', label: 'Purchase Orders' },
+      { key: 'invoices', label: 'Invoices' },
+      { key: 'activity', label: 'Activity' },
+      { key: 'reports', label: 'Reports' },
+    ],
+    vendor: [
+      { key: 'dashboard', label: 'Dashboard' },
+      { key: 'rfqs', label: 'Available RFQs' },
+      { key: 'quotations', label: 'My Quotations' },
+      { key: 'purchase-orders', label: 'Purchase Orders' },
+      { key: 'notifications', label: 'Notifications' },
+    ],
+    manager: [
+      { key: 'dashboard', label: 'Dashboard' },
+      { key: 'approvals', label: 'Approvals' },
+      { key: 'workflow', label: 'Workflow Monitoring' },
+      { key: 'reports', label: 'Reports' },
+    ],
+    admin: [
+      { key: 'dashboard', label: 'Dashboard' },
+      { key: 'users', label: 'User Management' },
+      { key: 'vendors', label: 'Vendor Management' },
+      { key: 'analytics', label: 'Procurement Analytics' },
+      { key: 'reports', label: 'Reports' },
+      { key: 'activity', label: 'Activity Logs' },
+      { key: 'settings', label: 'Settings' },
+    ],
+  };
+
+  const NAV = ROLE_NAV[role] || ROLE_NAV.procurement_officer;
+
+  // Pre-compute derived stats used by role dashboards
   const totalPOs = purchaseOrders.reduce((s, p) => s + p.amount, 0);
-  const overdueInvoices = invoices.filter(i => i.status === "Overdue").length;
+  const overdueInvoices = invoiceList.filter(i => i.status === "Overdue").length;
   const activeRFQs = rfqList.filter(r => r.status === "Open").length;
   const pendingApprovals = approvalList.filter(a => a.status === "Pending").length;
+
+  // Role-based dashboard cards and quick actions
+  const DASHBOARD_VIEW = {
+    procurement_officer: {
+      cards: [
+        { label: "Active RFQs", value: activeRFQs, color: "#e8f0fd", tcolor: "#1a5cc4" },
+        { label: "Pending Approvals", value: pendingApprovals, color: "#fff8e1", tcolor: "#a07800" },
+        { label: "Purchase Orders This Month", value: `₹ ${(totalPOs / 100000).toFixed(1)}L`, color: "#e6f4ec", tcolor: "#1a7a40" },
+        { label: "Overdue Invoices", value: overdueInvoices, color: "#fdecea", tcolor: "#b71c1c" },
+      ],
+      actions: [
+        { label: '+ New RFQ', onClick: () => { setActive('rfqs'); setShowNewRFQ(true); } },
+        { label: 'Compare Quotations', onClick: () => setActive('comparison') },
+        { label: 'Generate PO', onClick: () => setActive('purchase-orders') },
+        { label: 'Generate Invoice', onClick: () => setShowGenerateInvoice(true) },
+      ],
+    },
+    vendor: {
+      cards: [
+        { label: 'Open RFQs', value: rfqs.filter(r => r.status === 'Open').length, color: '#e8f0fd', tcolor: '#1a5cc4' },
+        { label: 'Submitted Quotations', value: quotations.length, color: '#e6f4ec', tcolor: '#1a7a40' },
+        { label: 'Active Purchase Orders', value: purchaseOrders.filter(p => p.status === 'Approved').length, color: '#fff8e1', tcolor: '#a07800' },
+        { label: 'Pending Payments', value: invoiceList.filter(i => i.status === 'Pending').length, color: '#fdecea', tcolor: '#b71c1c' },
+      ],
+      actions: [
+        { label: 'Submit Quotation', onClick: () => setActive('quotations') },
+        { label: 'Update Quotation', onClick: () => setActive('quotations') },
+        { label: 'View Purchase Orders', onClick: () => setActive('purchase-orders') },
+      ],
+    },
+    manager: {
+      cards: [
+        { label: 'Pending Approvals', value: pendingApprovals, color: '#fff8e1', tcolor: '#a07800' },
+        { label: 'Approved Requests', value: approvalList.filter(a => a.status === 'Approved').length, color: '#e6f4ec', tcolor: '#1a7a40' },
+        { label: 'Rejected Requests', value: approvalList.filter(a => a.status === 'Rejected').length, color: '#fdecea', tcolor: '#b71c1c' },
+        { label: 'Average Approval Time', value: '1.8 days', color: '#e8f0fd', tcolor: '#1a5cc4' },
+      ],
+      actions: [
+        { label: 'Approve Request', onClick: () => setActive('approvals') },
+        { label: 'Reject Request', onClick: () => setActive('approvals') },
+        { label: 'View Workflow', onClick: () => setActive('workflow') },
+      ],
+    },
+    admin: {
+      cards: [
+        { label: 'Total Users', value: 124, color: '#e8f0fd', tcolor: '#1a5cc4' },
+        { label: 'Total Vendors', value: vendorList.length, color: '#e6f4ec', tcolor: '#1a7a40' },
+        { label: 'Active RFQs', value: rfqs.filter(r => r.status === 'Open').length, color: '#fff8e1', tcolor: '#a07800' },
+        { label: 'Monthly Procurement Value', value: `₹ ${(totalPOs / 100000).toFixed(1)}L`, color: '#fdecea', tcolor: '#b71c1c' },
+      ],
+      actions: [
+        { label: 'Add User', onClick: () => setActive('users') },
+        { label: 'Add Vendor', onClick: () => setActive('vendors') },
+        { label: 'View Analytics', onClick: () => setActive('analytics') },
+        { label: 'Export Reports', onClick: () => setActive('reports') },
+      ],
+    },
+  };
+
+  const dashboardCards = DASHBOARD_VIEW[role]?.cards || DASHBOARD_VIEW.procurement_officer.cards;
+  const quickActions = DASHBOARD_VIEW[role]?.actions || DASHBOARD_VIEW.procurement_officer.actions;
+
 
   const handleApprove = (id) => setApprovalList(list => list.map(a => a.id === id ? { ...a, status: "Approved" } : a));
   const handleReject = (id) => setApprovalList(list => list.map(a => a.id === id ? { ...a, status: "Rejected" } : a));
@@ -200,21 +301,51 @@ export default function VendorBridge() {
     </div>
   );
 
-  const renderDashboard = () => (
+  // Generate Invoice Modal
+  const renderGenerateInvoiceModal = () => (
+    showGenerateInvoice && (
+      <Modal title="Generate Invoice" onClose={() => setShowGenerateInvoice(false)}>
+        <label style={{ display: 'block', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>Vendor</div>
+          <input style={inputStyle} value={newInvoice.vendor} onChange={e => setNewInvoice({ ...newInvoice, vendor: e.target.value })} placeholder="Vendor name" />
+        </label>
+        <label style={{ display: 'block', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>PO Reference</div>
+          <input style={inputStyle} value={newInvoice.po} onChange={e => setNewInvoice({ ...newInvoice, po: e.target.value })} placeholder="PO-001" />
+        </label>
+        <label style={{ display: 'block', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>Amount</div>
+          <input style={inputStyle} value={newInvoice.amount} onChange={e => setNewInvoice({ ...newInvoice, amount: e.target.value })} placeholder="87000" />
+        </label>
+        <label style={{ display: 'block', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>Due Date</div>
+          <input type="date" style={inputStyle} value={newInvoice.due} onChange={e => setNewInvoice({ ...newInvoice, due: e.target.value })} />
+        </label>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={btnGreen} onClick={() => {
+            if (!newInvoice.vendor || !newInvoice.amount) return;
+            const id = `INV-00${invoiceList.length + 1}`;
+            setInvoiceList([{ id, vendor: newInvoice.vendor, po: newInvoice.po || '—', amount: Number(newInvoice.amount), due: newInvoice.due || '', status: newInvoice.status }, ...invoiceList]);
+            setNewInvoice({ vendor: '', po: '', amount: '', due: '', status: 'Pending' });
+            setShowGenerateInvoice(false);
+            setActive('invoices');
+          }}>Create Invoice</button>
+          <button style={btnOutline} onClick={() => setShowGenerateInvoice(false)}>Cancel</button>
+        </div>
+      </Modal>
+    )
+  );
+
+  const renderProcurementDashboard = () => (
     <div>
       <h2 style={{ margin: "0 0 4px", color: "#1a2a1a", fontSize: 22, fontWeight: 700 }}>Dashboard</h2>
-      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>Welcome back, Procurement Officer — Today's Overview</p>
+      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>Welcome back, {ROLE_LABELS[role] || 'User'} — Today's Overview</p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
-        {[
-          { label: "Active RFQ's", value: activeRFQs, color: "#e8f0fd", tcolor: "#1a5cc4" },
-          { label: "Pending Approvals", value: pendingApprovals, color: "#fff8e1", tcolor: "#a07800" },
-          { label: `₹ ${(totalPOs / 100000).toFixed(1)}L`, label2: "POs this month", color: "#e6f4ec", tcolor: "#1a7a40" },
-          { label: overdueInvoices, label2: "Overdue Invoices", color: "#fdecea", tcolor: "#b71c1c" },
-        ].map((s, i) => (
+        {dashboardCards.map((s, i) => (
           <div key={i} style={{ ...cardStyle, background: s.color, padding: "18px 20px", textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: s.tcolor }}>{s.label}</div>
-            <div style={{ fontSize: 13, color: "#555", marginTop: 4 }}>{s.label2 || ["Active RFQ's", "Pending Approvals", "POs this month", "Overdue Invoices"][i]}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: s.tcolor }}>{s.value ?? s.label}</div>
+            <div style={{ fontSize: 13, color: "#555", marginTop: 4 }}>{s.label2 || s.label}</div>
           </div>
         ))}
       </div>
@@ -259,9 +390,9 @@ export default function VendorBridge() {
       </div>
 
       <div style={{ display: "flex", gap: 12 }}>
-        <button style={btnGreen} onClick={() => { setActive("rfqs"); setShowNewRFQ(true); }}>+ New RFQ</button>
-        <button style={btnOutline} onClick={() => { setActive("vendors"); setShowAddVendor(true); }}>Add Vendor</button>
-        <button style={btnOutline} onClick={() => setActive("invoices")}>View Invoices</button>
+        {quickActions.map((a, i) => (
+          <button key={i} style={a.label.startsWith('+') ? btnGreen : btnOutline} onClick={a.action}>{a.label}</button>
+        ))}
       </div>
     </div>
   );
@@ -504,7 +635,7 @@ export default function VendorBridge() {
   const renderInvoices = () => (
     <div>
       <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>Invoices</h2>
-      <p style={{ margin: "0 0 20px", color: "#888", fontSize: 13 }}>{invoices.filter(i => i.status === "Overdue").length} overdue invoices need attention</p>
+      <p style={{ margin: "0 0 20px", color: "#888", fontSize: 13 }}>{invoiceList.filter(i => i.status === "Overdue").length} overdue invoices need attention</p>
       <div style={cardStyle}>
         <table style={tableStyle}>
           <thead>
@@ -518,7 +649,7 @@ export default function VendorBridge() {
             </tr>
           </thead>
           <tbody>
-            {invoices.map(inv => (
+            {invoiceList.map(inv => (
               <tr key={inv.id} style={{ background: inv.status === "Overdue" ? "#fff8f8" : "transparent" }}>
                 <td style={tdStyle}><strong>{inv.id}</strong></td>
                 <td style={tdStyle}>{inv.vendor}</td>
@@ -603,24 +734,261 @@ export default function VendorBridge() {
     </div>
   );
 
+  const renderVendorDashboard = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", color: "#1a2a1a", fontSize: 22, fontWeight: 700 }}>Vendor Dashboard</h2>
+      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>Track RFQs, quotations, and purchase orders</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        {dashboardCards.map((card, index) => (
+          <div key={index} style={{ ...cardStyle, background: card.color, padding: "18px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: card.tcolor }}>{card.value}</div>
+            <div style={{ fontSize: 13, color: "#555", marginTop: 4 }}>{card.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 20, marginBottom: 20 }}>
+        <div style={cardStyle}>
+          <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#333" }}>Available RFQs</h4>
+          <table style={tableStyle}>
+            <thead><tr><th style={thStyle}>RFQ ID</th><th style={thStyle}>Title</th><th style={thStyle}>Quantity</th><th style={thStyle}>Deadline</th></tr></thead>
+            <tbody>
+              {rfqList.filter(r => r.status === 'Open').map(r => (
+                <tr key={r.id}><td style={tdStyle}>{r.id}</td><td style={tdStyle}>{r.title}</td><td style={tdStyle}>{r.vendors} invited</td><td style={tdStyle}>{r.deadline}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={cardStyle}>
+          <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#333" }}>Quotation Tracker</h4>
+          {['Draft', 'Submitted', 'Under Review', 'Approved', 'Rejected'].map((status, index) => (
+            <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: index < 2 ? '#2a5a2a' : '#ccc' }} />
+              <div style={{ fontSize: 13 }}>{status}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={cardStyle}>
+        <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#333" }}>Purchase Orders</h4>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>PO Number</th><th style={thStyle}>Date</th><th style={thStyle}>Amount</th><th style={thStyle}>Status</th></tr></thead>
+          <tbody>
+            {purchaseOrders.slice(0, 4).map(po => (
+              <tr key={po.id}><td style={tdStyle}>{po.id}</td><td style={tdStyle}>{po.date}</td><td style={tdStyle}>₹{po.amount.toLocaleString('en-IN')}</td><td style={tdStyle}><StatusBadge status={po.status} /></td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderManagerDashboard = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", color: "#1a2a1a", fontSize: 22, fontWeight: 700 }}>Manager Dashboard</h2>
+      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>Approve requests and monitor procurement workflow</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        {dashboardCards.map((card, index) => (
+          <div key={index} style={{ ...cardStyle, background: card.color, padding: "18px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: card.tcolor }}>{card.value}</div>
+            <div style={{ fontSize: 13, color: "#555", marginTop: 4 }}>{card.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={cardStyle}>
+        <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#333" }}>Pending Approvals</h4>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>Request ID</th><th style={thStyle}>RFQ Title</th><th style={thStyle}>Requested By</th><th style={thStyle}>Amount</th><th style={thStyle}>Date</th><th style={thStyle}>Action</th></tr></thead>
+          <tbody>
+            {approvalList.map(a => (
+              <tr key={a.id}><td style={tdStyle}>{a.id}</td><td style={tdStyle}>{a.ref}</td><td style={tdStyle}>{a.requestedBy}</td><td style={tdStyle}>{a.amount}</td><td style={tdStyle}>{a.date}</td><td style={tdStyle}>{a.status === 'Pending' ? 'Approve / Reject' : a.status}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderAdminDashboard = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", color: "#1a2a1a", fontSize: 22, fontWeight: 700 }}>Admin Dashboard</h2>
+      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>Manage users, vendors, and analytics</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        {dashboardCards.map((card, index) => (
+          <div key={index} style={{ ...cardStyle, background: card.color, padding: "18px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: card.tcolor }}>{card.value}</div>
+            <div style={{ fontSize: 13, color: "#555", marginTop: 4 }}>{card.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div style={cardStyle}>
+          <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#333" }}>User Management</h4>
+          <p style={{ margin: 0, color: '#666', fontSize: 13 }}>Use the Users page to add, edit, disable, or delete users.</p>
+        </div>
+        <div style={cardStyle}>
+          <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#333" }}>Vendor Management</h4>
+          <p style={{ margin: 0, color: '#666', fontSize: 13 }}>Review vendors and system analytics from admin-only pages.</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderComparison = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", color: "#1a2a1a", fontSize: 22, fontWeight: 700 }}>Quotation Comparison</h2>
+      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>Compare vendor quotations side by side</p>
+      <div style={cardStyle}>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>RFQ</th><th style={thStyle}>Vendor</th><th style={thStyle}>Amount</th><th style={thStyle}>Rating</th><th style={thStyle}>Delivery</th></tr></thead>
+          <tbody>
+            {quotations.map((q, index) => (
+              <tr key={q.id} style={index === 0 ? { background: '#f0fbf5' } : undefined}>
+                <td style={tdStyle}>{q.rfq}</td>
+                <td style={tdStyle}>{q.vendor}</td>
+                <td style={tdStyle}>{q.amount}</td>
+                <td style={tdStyle}>4.5</td>
+                <td style={tdStyle}>7-10 days</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderWorkflow = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", color: "#1a2a1a", fontSize: 22, fontWeight: 700 }}>Workflow Monitoring</h2>
+      <p style={{ margin: "0 0 24px", color: "#666", fontSize: 14 }}>RFQ created → quotation submitted → approval pending → approved → PO generated → invoice generated</p>
+    </div>
+  );
+
+  const renderAdminAnalytics = () => renderReports();
+
+  const renderAdminActivity = () => renderActivity();
+
+  const renderSettings = () => (
+    <div>
+      <h2 style={{ margin: 0, fontSize: 22, color: '#1a2a1a' }}>Settings</h2>
+      <p style={{ color: '#666' }}>System settings are available to admin users.</p>
+    </div>
+  );
+
+  const renderVendorRfqs = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>Available RFQs</h2>
+      <p style={{ margin: "0 0 20px", color: "#888", fontSize: 13 }}>Open RFQs you can respond to</p>
+      <div style={cardStyle}>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>RFQ ID</th><th style={thStyle}>Title</th><th style={thStyle}>Deadline</th></tr></thead>
+          <tbody>{rfqList.filter(r => r.status === 'Open').map(r => <tr key={r.id}><td style={tdStyle}>{r.id}</td><td style={tdStyle}>{r.title}</td><td style={tdStyle}>{r.deadline}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderVendorQuotations = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>My Quotations</h2>
+      <div style={cardStyle}>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>Quotation</th><th style={thStyle}>RFQ</th><th style={thStyle}>Amount</th><th style={thStyle}>Status</th></tr></thead>
+          <tbody>{quotations.map(q => <tr key={q.id}><td style={tdStyle}>{q.id}</td><td style={tdStyle}>{q.rfq}</td><td style={tdStyle}>{q.amount}</td><td style={tdStyle}><StatusBadge status={q.status} /></td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderVendorPurchaseOrders = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>Purchase Orders</h2>
+      <div style={cardStyle}>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>PO Number</th><th style={thStyle}>Vendor</th><th style={thStyle}>Amount</th><th style={thStyle}>Status</th></tr></thead>
+          <tbody>{purchaseOrders.slice(0, 4).map(po => <tr key={po.id}><td style={tdStyle}>{po.id}</td><td style={tdStyle}>{po.vendor}</td><td style={tdStyle}>₹{po.amount.toLocaleString('en-IN')}</td><td style={tdStyle}><StatusBadge status={po.status} /></td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderVendorNotifications = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>Notifications</h2>
+      <div style={cardStyle}>
+        {['New RFQ invitation', 'Quotation update received', 'Purchase order status changed'].map((note, index) => (
+          <div key={note} style={{ padding: '10px 0', borderBottom: index < 2 ? '1px solid #f0f0f0' : 'none' }}>{note}</div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderUsersManagement = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>User Management</h2>
+      <div style={cardStyle}>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>Name</th><th style={thStyle}>Email</th><th style={thStyle}>Role</th><th style={thStyle}>Status</th></tr></thead>
+          <tbody>
+            {[
+              { name: 'Bhagyashree Jadeja', email: 'bhag@example.com', role: 'admin', status: 'Active' },
+              { name: 'Amit Shah', email: 'amit@example.com', role: 'manager', status: 'Active' },
+              { name: 'Neha Roy', email: 'neha@example.com', role: 'procurement_officer', status: 'Active' },
+            ].map(userItem => <tr key={userItem.email}><td style={tdStyle}>{userItem.name}</td><td style={tdStyle}>{userItem.email}</td><td style={tdStyle}>{userItem.role}</td><td style={tdStyle}><StatusBadge status={userItem.status} /></td></tr>)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderVendorManagement = () => (
+    <div>
+      <h2 style={{ margin: "0 0 4px", fontSize: 20, color: "#1a2a1a" }}>Vendor Management</h2>
+      <div style={cardStyle}>
+        <table style={tableStyle}>
+          <thead><tr><th style={thStyle}>Vendor</th><th style={thStyle}>Category</th><th style={thStyle}>Rating</th><th style={thStyle}>Status</th></tr></thead>
+          <tbody>{vendorList.map(v => <tr key={v.id}><td style={tdStyle}>{v.name}</td><td style={tdStyle}>{v.category}</td><td style={tdStyle}><Stars rating={v.rating} /></td><td style={tdStyle}><StatusBadge status={v.status} /></td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderManagerReports = () => renderReports();
+
+  const renderAdminReports = () => renderReports();
+
+  const renderDashboard = () => {
+    switch (role) {
+      case 'vendor': return renderVendorDashboard();
+      case 'manager': return renderManagerDashboard();
+      case 'admin': return renderAdminDashboard();
+      default: return renderProcurementDashboard();
+    }
+  };
+
   const pages = {
     dashboard: renderDashboard,
-    vendors: renderVendors,
-    rfqs: renderRFQs,
-    quotations: renderQuotations,
+    vendors: role === 'vendor' ? renderVendorDashboard : role === 'admin' ? renderVendorManagement : renderVendors,
+    users: renderUsersManagement,
+    rfqs: role === 'vendor' ? renderVendorRfqs : renderRFQs,
+    quotations: role === 'vendor' ? renderVendorQuotations : renderQuotations,
+    comparison: renderComparison,
     approvals: renderApprovals,
-    "purchase-orders": renderPurchaseOrders,
+    workflow: renderWorkflow,
+    "purchase-orders": role === 'vendor' ? renderVendorPurchaseOrders : renderPurchaseOrders,
     invoices: renderInvoices,
-    reports: renderReports,
-    activity: renderActivity,
+    analytics: renderAdminAnalytics,
+    reports: role === 'manager' ? renderManagerReports : renderReports,
+    activity: role === 'admin' ? renderAdminActivity : renderActivity,
+    notifications: renderVendorNotifications,
+    settings: renderSettings,
   };
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Segoe UI, system-ui, sans-serif", background: "#111" }}>
       <div style={sidebarStyle}>
-        <div style={{ padding: "0 24px 20px", borderBottom: "1px solid #2a3a2a", marginBottom: 12 }}>
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: 0.5 }}>VendorBridge</span>
-        </div>
+        <div style={{ padding: "0 24px 20px", borderBottom: "1px solid #2a3a2a", marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src={logoUrl} alt="VendorBridge" style={{ height: 36 }} />
+          </div>
         {NAV.map(n => (
           <div key={n.key} style={navItemStyle(n.key)} onClick={() => setActive(n.key)}>
             — {n.label}

@@ -41,14 +41,14 @@ export default function App() {
           <Route path="/dashboard/procurement" element={<RequireAuth allowedRoles={[ 'procurement_officer' ]}><DashboardPage dashboardRole="procurement_officer" /></RequireAuth>} />
           <Route path="/dashboard/vendor" element={<RequireAuth allowedRoles={[ 'vendor' ]}><DashboardPage dashboardRole="vendor" /></RequireAuth>} />
           <Route path="/users" element={<RequireAuth allowedRoles={[ 'admin' ]}><UsersPage /></RequireAuth>} />
-          <Route path="/vendors" element={<RequireAuth allowedRoles={[ 'admin' ]}><VendorsPage /></RequireAuth>} />
+          <Route path="/vendors" element={<RequireAuth allowedRoles={[ 'admin', 'procurement_officer' ]}><VendorsPage /></RequireAuth>} />
           <Route path="/rfqs" element={<RequireAuth allowedRoles={[ 'manager', 'procurement_officer', 'vendor' ]}><RfqsPage /></RequireAuth>} />
           <Route path="/quotations" element={<RequireAuth allowedRoles={[ 'manager', 'procurement_officer', 'vendor' ]}><QuotationsPage /></RequireAuth>} />
-          <Route path="/approvals" element={<RequireAuth allowedRoles={[ 'manager' ]}><ApprovalsPage /></RequireAuth>} />
+          <Route path="/approvals" element={<RequireAuth allowedRoles={[ 'manager', 'admin' ]}><ApprovalsPage /></RequireAuth>} />
           <Route path="/purchase-orders" element={<RequireAuth allowedRoles={[ 'manager', 'procurement_officer', 'vendor' ]}><PurchaseOrdersPage /></RequireAuth>} />
-          <Route path="/invoices" element={<RequireAuth allowedRoles={[ 'procurement_officer' ]}><InvoicesPage /></RequireAuth>} />
-          <Route path="/analytics" element={<RequireAuth allowedRoles={[ 'admin' ]}><AnalyticsPage /></RequireAuth>} />
-          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/invoices" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'manager' ]}><InvoicesPage /></RequireAuth>} />
+          <Route path="/analytics" element={<RequireAuth allowedRoles={[ 'admin', 'manager' ]}><AnalyticsPage /></RequireAuth>} />
+          <Route path="/notifications" element={<RequireAuth allowedRoles={[ 'admin', 'manager', 'procurement_officer', 'vendor' ]}><NotificationsPage /></RequireAuth>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
