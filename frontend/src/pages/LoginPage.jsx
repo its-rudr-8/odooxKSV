@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (auth.isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -20,12 +26,7 @@ export default function LoginPage() {
 
     try {
       const response = await apiClient.post('/auth/login', formData);
-      const { accessToken, refreshToken, user } = response.data.data;
-
-      localStorage.setItem('vb_access_token', accessToken);
-      localStorage.setItem('vb_refresh_token', refreshToken);
-      localStorage.setItem('vb_user', JSON.stringify(user));
-
+      auth.login(response.data.data);
       navigate('/dashboard', { replace: true });
     } catch (requestError) {
       const message =
@@ -104,6 +105,10 @@ export default function LoginPage() {
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        <p style={{ marginTop: 20, color: 'var(--muted)' }}>
+          Need an account? <Link to="/signup">Sign up as a vendor</Link>.
+        </p>
       </section>
     </div>
   );

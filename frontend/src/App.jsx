@@ -9,26 +9,36 @@ import PurchaseOrdersPage from './pages/PurchaseOrdersPage';
 import InvoicesPage from './pages/InvoicesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import UsersPage from './pages/UsersPage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
+import RequireAuth from './components/RequireAuth';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/vendors" element={<VendorsPage />} />
-        <Route path="/rfqs" element={<RfqsPage />} />
-        <Route path="/quotations" element={<QuotationsPage />} />
-        <Route path="/approvals" element={<ApprovalsPage />} />
-        <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
-        <Route path="/invoices" element={<InvoicesPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/forbidden" element={<ForbiddenPage />} />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/users" element={<RequireAuth allowedRoles={[ 'admin' ]}><UsersPage /></RequireAuth>} />
+          <Route path="/vendors" element={<RequireAuth allowedRoles={[ 'admin' ]}><VendorsPage /></RequireAuth>} />
+          <Route path="/rfqs" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'vendor' ]}><RfqsPage /></RequireAuth>} />
+          <Route path="/quotations" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'vendor' ]}><QuotationsPage /></RequireAuth>} />
+          <Route path="/approvals" element={<RequireAuth allowedRoles={[ 'manager' ]}><ApprovalsPage /></RequireAuth>} />
+          <Route path="/purchase-orders" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'vendor' ]}><PurchaseOrdersPage /></RequireAuth>} />
+          <Route path="/invoices" element={<RequireAuth allowedRoles={[ 'procurement_officer' ]}><InvoicesPage /></RequireAuth>} />
+          <Route path="/analytics" element={<RequireAuth allowedRoles={[ 'admin' ]}><AnalyticsPage /></RequireAuth>} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Route>
-      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
