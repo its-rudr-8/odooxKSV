@@ -1,16 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { getDashboardPath } from '../utils';
 
 const pagesByRole = {
   admin: [
-    { to: '/dashboard', label: 'Dashboard' },
+    { to: getDashboardPath('admin'), label: 'Dashboard' },
     { to: '/users', label: 'Users' },
     { to: '/vendors', label: 'Vendors' },
     { to: '/analytics', label: 'Analytics' },
     { to: '/notifications', label: 'Notifications' },
   ],
   procurement_officer: [
-    { to: '/dashboard', label: 'Dashboard' },
+    { to: getDashboardPath('procurement_officer'), label: 'Dashboard' },
     { to: '/rfqs', label: 'RFQs' },
     { to: '/quotations', label: 'Quotations' },
     { to: '/purchase-orders', label: 'Purchase Orders' },
@@ -18,16 +19,18 @@ const pagesByRole = {
     { to: '/notifications', label: 'Notifications' },
   ],
   vendor: [
-    { to: '/dashboard', label: 'Dashboard' },
+    { to: getDashboardPath('vendor'), label: 'Dashboard' },
     { to: '/rfqs', label: 'RFQs' },
     { to: '/quotations', label: 'Quotations' },
     { to: '/purchase-orders', label: 'Purchase Orders' },
     { to: '/notifications', label: 'Notifications' },
   ],
   manager: [
-    { to: '/dashboard', label: 'Dashboard' },
+    { to: getDashboardPath('manager'), label: 'Dashboard' },
     { to: '/approvals', label: 'Approvals' },
     { to: '/rfqs', label: 'RFQs' },
+    { to: '/quotations', label: 'Quotations' },
+    { to: '/purchase-orders', label: 'Purchase Orders' },
     { to: '/notifications', label: 'Notifications' },
   ],
 };

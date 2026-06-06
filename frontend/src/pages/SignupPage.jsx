@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { useAuth } from '../hooks/useAuth';
+import { getDashboardPath } from '../utils';
 
 export default function SignupPage() {
   const auth = useAuth();
@@ -19,7 +20,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState('');
 
   if (auth.isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getDashboardPath(auth.user?.role)} replace />;
   }
 
   function handleChange(event) {

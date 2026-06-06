@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export default function RequireAuth({ allowedRoles = [], children }) {
@@ -13,5 +13,5 @@ export default function RequireAuth({ allowedRoles = [], children }) {
     return <Navigate to="/forbidden" replace />;
   }
 
-  return children || null;
+  return children || <Outlet />;
 }

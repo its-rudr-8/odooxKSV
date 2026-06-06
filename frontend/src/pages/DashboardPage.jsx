@@ -65,10 +65,10 @@ const roleConfig = {
   },
 };
 
-export default function DashboardPage() {
+export default function DashboardPage({ dashboardRole }) {
   const { user } = useAuth();
-  const role = user?.role || 'procurement_officer';
-  const config = roleConfig[role];
+  const role = dashboardRole || user?.role || 'procurement_officer';
+  const config = roleConfig[role] || roleConfig.procurement_officer;
 
   return (
     <div className="page">

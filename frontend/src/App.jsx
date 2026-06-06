@@ -16,6 +16,13 @@ import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
 import DebugPage from './pages/DebugPage';
 import RequireAuth from './components/RequireAuth';
+import { useAuth } from './hooks/useAuth';
+import { getDashboardPath } from './utils';
+
+function DashboardRedirect() {
+  const { user } = useAuth();
+  return <Navigate to={getDashboardPath(user?.role)} replace />;
+}
 
 export default function App() {
   return (
@@ -27,14 +34,18 @@ export default function App() {
 
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/" element={<DashboardRedirect />} />
+          <Route path="/dashboard" element={<DashboardRedirect />} />
+          <Route path="/dashboard/admin" element={<RequireAuth allowedRoles={[ 'admin' ]}><DashboardPage dashboardRole="admin" /></RequireAuth>} />
+          <Route path="/dashboard/manager" element={<RequireAuth allowedRoles={[ 'manager' ]}><DashboardPage dashboardRole="manager" /></RequireAuth>} />
+          <Route path="/dashboard/procurement" element={<RequireAuth allowedRoles={[ 'procurement_officer' ]}><DashboardPage dashboardRole="procurement_officer" /></RequireAuth>} />
+          <Route path="/dashboard/vendor" element={<RequireAuth allowedRoles={[ 'vendor' ]}><DashboardPage dashboardRole="vendor" /></RequireAuth>} />
           <Route path="/users" element={<RequireAuth allowedRoles={[ 'admin' ]}><UsersPage /></RequireAuth>} />
           <Route path="/vendors" element={<RequireAuth allowedRoles={[ 'admin' ]}><VendorsPage /></RequireAuth>} />
-          <Route path="/rfqs" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'vendor' ]}><RfqsPage /></RequireAuth>} />
-          <Route path="/quotations" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'vendor' ]}><QuotationsPage /></RequireAuth>} />
+          <Route path="/rfqs" element={<RequireAuth allowedRoles={[ 'manager', 'procurement_officer', 'vendor' ]}><RfqsPage /></RequireAuth>} />
+          <Route path="/quotations" element={<RequireAuth allowedRoles={[ 'manager', 'procurement_officer', 'vendor' ]}><QuotationsPage /></RequireAuth>} />
           <Route path="/approvals" element={<RequireAuth allowedRoles={[ 'manager' ]}><ApprovalsPage /></RequireAuth>} />
-          <Route path="/purchase-orders" element={<RequireAuth allowedRoles={[ 'procurement_officer', 'vendor' ]}><PurchaseOrdersPage /></RequireAuth>} />
+          <Route path="/purchase-orders" element={<RequireAuth allowedRoles={[ 'manager', 'procurement_officer', 'vendor' ]}><PurchaseOrdersPage /></RequireAuth>} />
           <Route path="/invoices" element={<RequireAuth allowedRoles={[ 'procurement_officer' ]}><InvoicesPage /></RequireAuth>} />
           <Route path="/analytics" element={<RequireAuth allowedRoles={[ 'admin' ]}><AnalyticsPage /></RequireAuth>} />
           <Route path="/notifications" element={<NotificationsPage />} />

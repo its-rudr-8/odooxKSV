@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { useAuth } from '../hooks/useAuth';
+import { getDashboardPath } from '../utils';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (auth.isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getDashboardPath(auth.user?.role)} replace />;
   }
 
   function handleChange(event) {
@@ -26,8 +27,9 @@ export default function LoginPage() {
 
     try {
       const response = await apiClient.post('/auth/login', formData);
-      auth.login(response.data.data);
-      navigate('/dashboard', { replace: true });
+      const authData = response.data.data;
+      auth.login(authData);
+      navigate(getDashboardPath(authData.user?.role), { replace: true });
     } catch (requestError) {
       const message =
         requestError.code === 'ERR_NETWORK'
